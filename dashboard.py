@@ -31,7 +31,7 @@ class Dashboard:
         dict_day_of_week = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
         #
         list_instr = list(dict_sess.keys())
-        # list_instr = [i for i in list_instr if 'USD' not in i]
+        list_instr = [i for i in list_instr if 'USD' not in i]
         instrument = st.sidebar.selectbox(label = 'Instrument:', options = list_instr)
         # sidebar - choose timeframe
         timeframe = st.sidebar.radio(label = 'Timeframe:', options = ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m', 'Daily', 'Weekly'],
@@ -142,7 +142,7 @@ class Dashboard:
 
         Returns: None.
         '''
-        df = pd.read_pickle(f'./data_{self.instrument}.pickle.gz')
+        df = pd.read_pickle(f'./data/data_{self.instrument}.pickle.gz')
         df['date'] = pd.to_datetime(df['date'])
         self.df = df
 
