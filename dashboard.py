@@ -142,7 +142,7 @@ class Dashboard:
 
         Returns: None.
         '''
-        df = pd.read_pickle(f'./data/data_{self.instrument}.pickle.gz')
+        df = pd.read_pickle(f'./data_{self.instrument}.pickle.gz')
         df['date'] = pd.to_datetime(df['date'])
         self.df = df
 
@@ -225,7 +225,8 @@ class Dashboard:
         Returns: None.
         '''
         self.group_by = st.sidebar.radio(label = 'Group by:', options = [None, 'Time', 'Day of week + time', 'Day of month + time', 'Month + time',
-                                                                         'History', 'Day of week + history', 'Day of month + history', 'Month + history'],
+                                                                         'Month + day of month + time', 'History', 'Day of week + history',
+                                                                         'Day of month + history', 'Month + history'],
                                          horizontal = True)
 
     def _select_group_function(self):
@@ -247,7 +248,8 @@ class Dashboard:
 
         Returns: None.
         '''
-        self.unit = st.sidebar.radio(label = 'Unit:', options = ['Point', '$'], horizontal = True)
+        unit = st.sidebar.radio(label = 'Unit:', options = ['Points', '$'], horizontal = True)
+        self.unit = unit.lower()
                 
     def _highlight_trading_sessions(self):
         '''
@@ -479,6 +481,11 @@ class Dashboard:
                 self.col_x = 'time'
                 self.col_color = 'month'
                 self.format_x = '%H:%M:%S'
+            if self.group_by == 'Month + day of month + time':
+                self.group_cols = ['month', 'day_of_month', 'time']
+                self.col_x = 'day_of_month_time'
+                self.col_color = 'month'
+                self.format_x = '%Y-%m-%d %H:%M:%S'
             if self.group_by == 'History':
                 self.group_cols = 'history'
                 self.col_x = 'history'
@@ -570,6 +577,11 @@ class Dashboard:
             if 'month' in df.columns:
                 df['month'] = df['month'].replace({value: key for key, value in self.dict_month.items()})
             #
+            if self.col_x == 'day_of_month_time':        
+                df['day of month'] = pd.to_datetime('2000-01-' + df['day_of_month'].astype(str).str.zfill(2) + ' ' + df['time'].astype(str))
+                df = df.drop('time', axis = 1)
+                self.col_x = 'day of month'
+            #
             self.df = df
 
     def _adjust_timeframe(self):
@@ -656,7 +668,11 @@ class Dashboard:
                                                 'tickangle': -90, 'title': self.col_x},
                                        yaxis = {'showgrid': True, 'showline': True, 'mirror': True, 'titlefont': {'size': 20}, 'tickfont': {'size': 16},
                                                 'tickformat': f'.{n_digits}f', 'title': label_y},
-                                       font = {'size': 28}, autosize = False, width = 700, height = 500))
+                                       font = {'size': 28}, autosize = False, width = 900, height = 500, hovermode = 'closest'))
+        if dashboard.col_x == 'Day of month':
+            figure.update_layout(go.Layout(xaxis = {'tickmode': 'array', 'tickvals': [f'2000-01-{str(i).zfill(2)} 00:00:00' for i in np.arange(1, 32, 2)],
+                                                    'ticktext': [f'{i}' for i in np.arange(1, 32, 2)],'showgrid': True, 'showline': True, 'mirror': True,
+                                                    'titlefont': {'size': 20}, 'tickfont': {'size': 16}, 'tickangle': 0}))
         #
         if dashboard.plot_type == 'Lines':
             if dashboard.col_color is None:
@@ -780,7 +796,7 @@ class Dashboard:
                                                 'tickformat': f'.{n_digits}f', 'title': label_x},
                                        yaxis = {'showgrid': True, 'showline': True, 'mirror': True, 'titlefont': {'size': 20}, 'tickfont': {'size': 12},
                                                 'title': self.col_x},
-                                       font = {'size': 28}, autosize = False, width = 700, height = 550))
+                                       font = {'size': 28}, autosize = False, width = 900, height = 550))
         #
         figure.add_trace(go.Bar(x = df_bottom['Metric'], y = df_bottom[self.col_x], marker_color = color_bottom, orientation = 'h'))
         figure.add_trace(go.Bar(x = df_top['Metric'], y = df_top[self.col_x], marker_color = color_top, orientation = 'h'))
@@ -820,7 +836,7 @@ class Dashboard:
                                                  'tickangle': -90, 'title': self.col_x},
                                        yaxis2 = {'showgrid': True, 'showline': True, 'mirror': True, 'titlefont': {'size': 20}, 'tickfont': {'size': 16},
                                                  'tickformat': f'.{n_digits_2}f', 'title': label_y_2},
-                                       font = {'size': 28}, autosize = False, width = 700, height = 500))
+                                       font = {'size': 28}, autosize = False, width = 900, height = 500))
         #
         if dashboard.plot_type == 'Lines':
             if dashboard.col_color is None:
@@ -978,6 +994,7 @@ class Dashboard:
         return figure
 
 if __name__ == '__main__':
+    st.set_page_config(layout = 'wide')
     with st.form(key = 'Main run'):
         # define the filters
         dashboard = Dashboard(max_rows = 250000)
