@@ -569,6 +569,11 @@ class Dashboard:
             else:
                 # the function is not 'cumsum'
                 if self.group_function != 'Cumsum':
+                    # for counts of highs/lows, use 'sum' instead of 'mean'
+                    if ((self.metric[0] in ['Num highs', 'Num lows', 'Num highs or lows']) and
+                        (self.metric[1] in ['Num highs', 'Num lows', 'Num highs or lows']) and (self.group_function == 'Mean')):
+                        self.group_function = 'Sum'
+                    #
                     if self.metric[0] in ['Num highs', 'Num lows', 'Num highs or lows']:
                         df['metric_1'], df['metric_2'] = df['metric_2'], df['metric_1']
                         self.metric = self.metric[::-1]
