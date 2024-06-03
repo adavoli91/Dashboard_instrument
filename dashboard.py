@@ -485,6 +485,7 @@ class Dashboard:
         self.col_color = None
         #
         if self.group_by is not None:
+            st.write(df)
             df['time'] = df['date'].dt.time
             df['weekday'] = df['date'].dt.weekday
             df['day_of_month'] = df['date'].dt.day
