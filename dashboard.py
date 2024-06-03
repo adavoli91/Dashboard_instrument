@@ -673,6 +673,7 @@ class Dashboard:
                                          'vol': 'sum'}).reset_index()
             self.df = df
             self._compute_metric()
+            st.write('aaa')
             self._group_data()
 
     def _plot_1_metric(self):
