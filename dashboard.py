@@ -403,6 +403,7 @@ class Dashboard:
             df['date'] = df['date'].dt.date
             df = df.groupby('date').agg({'session_start': 'sum', 'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'bpv': 'first',
                                          'vol': 'sum'}).reset_index()
+            df['date'] = pd.to_datetime(df['date'], format = '%Y-%m-%d')
         # weekly timeframe
         if timeframe == 'Weekly':
             df = pd.concat((df, df['date'].dt.isocalendar()), axis = 1)
