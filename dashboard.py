@@ -2,10 +2,44 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import datetime
-import altair as alt
 import plotly.graph_objects as go
 import decimal
+import hmac
 from plotly.subplots import make_subplots
+
+def check_password():
+    '''Returns `True` if the user had a correct password.'''
+
+    def login_form():
+        '''Form with widgets to collect user information'''
+        with st.form('Credentials'):
+            st.text_input('Username', key = 'username')
+            st.text_input('Password', type = 'password', key = 'password')
+            st.form_submit_button('Log in', on_click = password_entered)
+
+    def password_entered():
+        '''Checks whether a password entered by the user is correct.'''
+        if st.session_state['username'] in st.secrets[
+            'passwords'
+        ] and hmac.compare_digest(
+            st.session_state['password'],
+            st.secrets.passwords[st.session_state['username']],
+        ):
+            st.session_state['password_correct'] = True
+            del st.session_state['password']  # Don't store the username or password.
+            del st.session_state['username']
+        else:
+            st.session_state['password_correct'] = False
+
+    # Return True if the username + password is validated.
+    if st.session_state.get('password_correct', False):
+        return True
+
+    # Show inputs for username + password.
+    login_form()
+    if 'password_correct' in st.session_state:
+        st.error('Login error: user not known or password incorrect')
+    return False
 
 class Dashboard:
     def __init__(self, max_rows = 250000):
@@ -994,7 +1028,12 @@ class Dashboard:
         return figure
 
 if __name__ == '__main__':
+    # login
+    if not check_password():
+        st.stop()
+    # page width
     st.set_page_config(layout = 'wide')
+    #
     with st.form(key = 'Main run'):
         # define the filters
         dashboard = Dashboard(max_rows = 250000)
