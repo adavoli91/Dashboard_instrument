@@ -391,7 +391,6 @@ class Dashboard:
         '''
         df = self.df.copy()
         timeframe = self.timeframe
-        st.write('timeframe = ', timeframe)
         # intraday timeframe
         if timeframe in ['5m', '15m', '30m', '60m', '120m', '240m', '480m']:
             timeframe = timeframe.replace('m', 'min')
@@ -405,7 +404,6 @@ class Dashboard:
             df = df.groupby('date').agg({'session_start': 'sum', 'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'bpv': 'first',
                                          'vol': 'sum'}).reset_index()
             df['date'] = pd.to_datetime(df['date'], format = '%Y-%m-%d')
-            st.write('bbb')
         # weekly timeframe
         if timeframe == 'Weekly':
             df = pd.concat((df, df['date'].dt.isocalendar()), axis = 1)
@@ -488,7 +486,6 @@ class Dashboard:
         self.col_color = None
         #
         if self.group_by is not None:
-            st.write(df)
             df['time'] = df['date'].dt.time
             df['weekday'] = df['date'].dt.weekday
             df['day_of_month'] = df['date'].dt.day
@@ -676,7 +673,6 @@ class Dashboard:
                                          'vol': 'sum'}).reset_index()
             self.df = df
             self._compute_metric()
-            st.write('aaa')
             self._group_data()
 
     def _plot_1_metric(self):
