@@ -391,6 +391,7 @@ class Dashboard:
         '''
         df = self.df.copy()
         timeframe = self.timeframe
+        st.write('timeframe = ', timeframe)
         # intraday timeframe
         if timeframe in ['5m', '15m', '30m', '60m', '120m', '240m', '480m']:
             timeframe = timeframe.replace('m', 'min')
