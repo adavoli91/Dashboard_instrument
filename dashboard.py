@@ -436,11 +436,13 @@ class Dashboard:
             elif metric == 'Open-low':
                 df['metric'] = df['open'] - df['low']
             elif metric == 'Num highs':
-                df.loc[df.groupby('date').agg({'high': 'idxmax'})['high'].values, 'high_sess'] = 1
+                df['date_temp'] = df['date'].dt.date
+                df.loc[df.groupby('date_temp').agg({'high': 'idxmax'})['high'].values, 'high_sess'] = 1
                 df['high_sess'] = df['high_sess'].fillna(0).astype(int)
                 df['metric'] = df['high_sess']
             elif metric == 'Num lows':
-                df.loc[df.groupby('date').agg({'low': 'idxmin'})['low'].values, 'low_sess'] = 1
+                df['date_temp'] = df['date'].dt.date
+                df.loc[df.groupby('date_temp').agg({'low': 'idxmin'})['low'].values, 'low_sess'] = 1
                 df['low_sess'] = df['low_sess'].fillna(0).astype(int)
                 df['metric'] = df['low_sess']
             elif metric == 'Num highs or lows':
