@@ -832,7 +832,7 @@ class Dashboard:
                          x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
                          fillcolor = 'orange', opacity = 0.15, line_width = 0)
         figure.add_annotation(x = (first_time_conv + (second_time_conv - first_time_conv)/2).strftime('%H:%M:%S'), y = df['Metric'].min()*1.1,
-                              text = 'Regular trading hours', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
+                              text = 'Regular trading hours', font = {'size': 17, 'color': 'white'}, yanchor = 'top')
         return figure
     
     def _plot_tops_bottoms(self):
@@ -1089,12 +1089,12 @@ class Dashboard:
                          x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
                          fillcolor = 'orange', opacity = 0.15, line_width = 0, row = 1, col = 1)
         figure.add_annotation(x = (first_time_conv + (second_time_conv - first_time_conv)/2).strftime('%H:%M:%S'), y = df['Metric'].min()*1.1,
-                              text = 'Regular trading hours', font = {'size': 18, 'color': 'white'}, yanchor = 'top', row = 1, col = 1)
+                              text = 'Regular trading hours', font = {'size': 17, 'color': 'white'}, yanchor = 'top', row = 1, col = 1)
         figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= first_time)[0].min() - 1, 'Time'],
                          x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
                          fillcolor = 'orange', opacity = 0.15, line_width = 0, row = 2, col = 1)
         figure.add_annotation(x = (first_time_conv + (second_time_conv - first_time_conv)/2).strftime('%H:%M:%S'), y = df['Metric'].min()*1.1,
-                              text = 'Regular trading hours', font = {'size': 18, 'color': 'white'}, yanchor = 'top', row = 2, col = 1)
+                              text = 'Regular trading hours', font = {'size': 17, 'color': 'white'}, yanchor = 'top', row = 2, col = 1)
         return figure
 
 if __name__ == '__main__':
