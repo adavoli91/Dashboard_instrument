@@ -249,14 +249,23 @@ class Dashboard:
 
         Returns: None.
         '''
-        if self.n_metrics == 1:
-            self.metric = st.sidebar.radio(label = 'Metric:', options = ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low', 'Num highs',
-                                                                         'Num lows', 'Num highs or lows','Volume'],
-                                           horizontal = True)
+        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
+            if self.n_metrics == 1:
+                self.metric = st.sidebar.radio(label = 'Metric:', options = ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low', 'Num highs',
+                                                                            'Num lows', 'Num highs or lows','Volume'],
+                                            horizontal = True)
+            else:
+                self.metric = st.sidebar.multiselect(label = 'Metrics (choose 2):', options = ['Close', 'Delta close', 'Body', 'Range', 'Open-high',
+                                                                                               'Open-low', 'Num highs', 'Num lows', 'Num highs or lows',
+                                                                                               'Volume'])
+                self.metric = self.metric[:2]
         else:
-            self.metric = st.sidebar.multiselect(label = 'Metrics (choose 2):', options = ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low',
-                                                                                           'Num highs', 'Num lows', 'Num highs or lows', 'Volume'])
-            self.metric = self.metric[:2]
+            if self.n_metrics == 1:
+                self.metric = st.sidebar.radio(label = 'Metric:', options = ['Close', 'Body', 'Range', 'Open-high', 'Open-low', 'Volume'],
+                                            horizontal = True)
+            else:
+                self.metric = st.sidebar.multiselect(label = 'Metrics (choose 2):', options = ['Close', 'Body', 'Range', 'Open-high', 'Open-low', 'Volume'])
+                self.metric = self.metric[:2]
 
     def _select_group_strategy(self):
         '''
@@ -266,10 +275,13 @@ class Dashboard:
 
         Returns: None.
         '''
-        self.group_by = st.sidebar.radio(label = 'Group by:', options = [None, 'Time', 'Day of week + time', 'Day of month + time', 'Month + time',
-                                                                         'Month + day of month + time', 'History', 'Day of week + history',
-                                                                         'Day of month + history', 'Month + history'],
-                                         horizontal = True)
+        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
+            self.group_by = st.sidebar.radio(label = 'Group by:', options = [None, 'Time', 'Day of week + time', 'Day of month + time', 'Month + time',
+                                                                            'Month + day of month + time', 'History', 'Day of week + history',
+                                                                            'Day of month + history', 'Month + history'],
+                                             horizontal = True)
+        else:
+            self.group_by = None
 
     def _select_group_function(self):
         '''
@@ -418,7 +430,7 @@ class Dashboard:
         if timeframe == 'Daily':
             df['date'] = df['date'].dt.date
             df = df.groupby('date').agg({'session_start': 'sum', 'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'bpv': 'first',
-                                         'vol': 'sum'}).reset_index()
+                                         'vol': 'sum', 'n_sess': 'max'}).reset_index()
             df['date'] = pd.to_datetime(df['date'], format = '%Y-%m-%d')
         # weekly timeframe
         if timeframe == 'Weekly':
