@@ -457,7 +457,6 @@ class Dashboard:
                 # set `delta` to 0 when the session changes
                 if self.timeframe in ['5m', '15m', '30m', '60m', '120m', '240m', '480m']:
                     df.loc[df['n_sess'] != df['n_sess'].shift(1), 'metric'] = 0
-                    st.write('done')
             # body
             elif metric == 'Body':
                 df['metric'] = df['close'] - df['open']
@@ -759,7 +758,7 @@ class Dashboard:
                 for breakdown in df[dashboard.col_color].unique():
                     figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                 y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
-                                                name = f'{breakdown}', mode = 'lines'))
+                                                name = f'{breakdown}', mode = 'lines', hovertemplate='xxx'))
         elif dashboard.plot_type == 'Bars':
             if dashboard.col_color is None:
                 figure.add_trace(go.Bar(x = df[dashboard.col_x], y = df['Metric'], width = 0.5, offset = -0.5))
