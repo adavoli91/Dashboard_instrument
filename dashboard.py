@@ -314,7 +314,7 @@ class Dashboard:
 
         Returns: None.
         '''
-        self.plot_tops_bottoms = st.sidebar.radio(label = 'Plot tops and bottoms', options = ['No', 'Yes'])
+        self.plot_tops_bottoms = st.sidebar.radio(label = 'Plot tops and bottoms', options = ['No', 'Yes'], horizontal = True)
 
     def _filter_dates(self):
         '''
@@ -825,8 +825,8 @@ class Dashboard:
         first_time = self.dict_rth[self.instrument][0]
         second_time = self.dict_rth[self.instrument][1]
         #
-        first_time_conv = datetime.strptime(first_time, '%H:%M:%S')
-        second_time_conv = datetime.strptime(second_time, '%H:%M:%S')
+        first_time_conv = datetime.datetime.strptime(first_time, '%H:%M:%S')
+        second_time_conv = datetime.datetime.strptime(second_time, '%H:%M:%S')
         #
         figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= first_time)[0].min() - 1, 'Time'],
                          x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
@@ -1081,8 +1081,8 @@ class Dashboard:
         first_time = self.dict_rth[self.instrument][0]
         second_time = self.dict_rth[self.instrument][1]
         #
-        first_time_conv = datetime.strptime(first_time, '%H:%M:%S')
-        second_time_conv = datetime.strptime(second_time, '%H:%M:%S')
+        first_time_conv = datetime.datetime.strptime(first_time, '%H:%M:%S')
+        second_time_conv = datetime.datetime.strptime(second_time, '%H:%M:%S')
         #
         figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= first_time)[0].min() - 1, 'Time'],
                          x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
