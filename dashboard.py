@@ -448,6 +448,7 @@ class Dashboard:
                 # set `delta` to 0 when the session changes
                 if self.timeframe in ['5m', '15m', '30m', '60m', '120m', '240m', '480m']:
                     df.loc[df['n_sess'] != df['n_sess'].shift(1), 'metric'] = 0
+                    st.write('done')
             # body
             elif metric == 'Body':
                 df['metric'] = df['close'] - df['open']
