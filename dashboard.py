@@ -306,14 +306,17 @@ class Dashboard:
         Returns: None.
         '''
         self._plot_trading_sessions = None
-        sess_start, sess_end = self.dict_sess[self.instrument]
-        if (((sess_start == '17:00:00') and (sess_end == '16:00:00')) or ((sess_start == '18:00:00') and (sess_end == '17:00:00')) or
-            (self.instrument == 'FDAX')) and (self.timeframe in ['1m', '5m', '15m', '30m', '60m']):
-            self._plot_trading_sessions = st.sidebar.radio(label = 'Highlight trading sessions', options = ['Yes', 'No'], horizontal = True)
-        if self.instrument in self.dict_rth.keys():
-            self._plot_rth = st.sidebar.radio(label = 'Highlight regular trading hours', options = ['No', 'Yes'], horizontal = True)
-        if self._plot_trading_sessions == True:
-            self._plot_rth = False
+        self._plot_rth = None
+        #
+        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
+            sess_start, sess_end = self.dict_sess[self.instrument]
+            if (((sess_start == '17:00:00') and (sess_end == '16:00:00')) or ((sess_start == '18:00:00') and (sess_end == '17:00:00')) or
+                (self.instrument == 'FDAX')) and (self.timeframe in ['1m', '5m', '15m', '30m', '60m']):
+                self._plot_trading_sessions = st.sidebar.radio(label = 'Highlight trading sessions', options = ['Yes', 'No'], horizontal = True)
+            if self.instrument in self.dict_rth.keys():
+                self._plot_rth = st.sidebar.radio(label = 'Highlight regular trading hours', options = ['No', 'Yes'], horizontal = True)
+            if self._plot_trading_sessions == True:
+                self._plot_rth = False
 
     def _get_tops_bottoms(self):
         '''
@@ -323,7 +326,9 @@ class Dashboard:
 
         Returns: None.
         '''
-        self.plot_tops_bottoms = st.sidebar.radio(label = 'Plot tops and bottoms', options = ['No', 'Yes'], horizontal = True)
+        self.plot_tops_bottoms = 'No'
+        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
+            self.plot_tops_bottoms = st.sidebar.radio(label = 'Plot tops and bottoms', options = ['No', 'Yes'], horizontal = True)
 
     def _filter_dates(self):
         '''
