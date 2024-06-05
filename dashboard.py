@@ -142,12 +142,10 @@ class Dashboard:
 
         Returns: None.
         '''
-        filt_month = None
         # sidebar - filter month
-        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
-            filt_month = st.sidebar.multiselect(label = 'Months to exclude:',
-                                                options = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
-        self.filt_month = filt_month
+        filt_month = st.sidebar.multiselect(label = 'Months to exclude:',
+                                            options = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    self.filt_month = filt_month
 
     def _get_day_of_month_filter(self):
         '''
@@ -157,10 +155,8 @@ class Dashboard:
 
         Returns: None.
         '''
-        filt_day_month = None
         # sidebar - filter day of month
-        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
-            filt_day_month = st.sidebar.multiselect(label = 'Days of month to exclude:', options = range(1, 32))
+        filt_day_month = st.sidebar.multiselect(label = 'Days of month to exclude:', options = range(1, 32))
         self.filt_day_month = filt_day_month
 
     def _get_day_of_week_filter(self):
@@ -171,10 +167,8 @@ class Dashboard:
 
         Returns: None.
         '''
-        filt_day_week = None
         # sidebar - filter day of week
-        if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
-            filt_day_week = st.sidebar.multiselect(label = 'Days of week to exclude:', options = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+        filt_day_week = st.sidebar.multiselect(label = 'Days of week to exclude:', options = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
         self.filt_day_week = filt_day_week
 
     def _get_data(self):
