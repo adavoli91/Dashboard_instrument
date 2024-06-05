@@ -235,6 +235,7 @@ class Dashboard:
 
         Returns: None.
         '''
+        self.n_metrics = 1
         if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
             self.n_metrics = st.sidebar.radio(label = 'Number of metrics:', options = [1, 2], horizontal = True)
 
