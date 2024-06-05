@@ -755,8 +755,9 @@ class Dashboard:
             if dashboard.col_color is None:
                 figure.add_trace(go.Scatter(x = df[dashboard.col_x], y = df['Metric'], mode = 'lines'))
             else:
+                st.write(dashboard.col_x)
                 for breakdown in df[dashboard.col_color].unique():
-                    if dashboard.col_x != 'day_of_month_time':
+                    if dashboard.col_x != 'day of month':
                         figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                     y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
                                                     name = f'{breakdown}', mode = 'lines'))
@@ -769,7 +770,7 @@ class Dashboard:
                 figure.add_trace(go.Bar(x = df[dashboard.col_x], y = df['Metric'], width = 0.5, offset = -0.5))
             else:
                 for breakdown in df[dashboard.col_color].unique():
-                    if dashboard.col_x != 'day_of_month_time':
+                    if dashboard.col_x != 'day of month':
                         figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                     y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
                                                     name = f'{breakdown}', width = 0.5, offset = -0.5))
