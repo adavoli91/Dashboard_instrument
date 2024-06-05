@@ -181,6 +181,11 @@ class Dashboard:
         '''
         df = pd.read_pickle(f'./data/data_{self.instrument}.pickle.gz')
         df['date'] = pd.to_datetime(df['date'])
+        # add a session counter
+        df.loc[df['session_start'] == True, 'n_sess'] = range(df['session_start'].sum())
+        df['n_sess'] = df['n_sess'].ffill()
+        df = df[~df['n_sess'].isnull()].reset_index(drop = True)
+        #
         self.df = df
 
     def _get_time_filter(self):
@@ -408,7 +413,7 @@ class Dashboard:
             # round time to appropriate (according to timeframe) bar
             df['date'] = df['date'].dt.ceil(timeframe)
             df = df.groupby('date').agg({'session_start': 'sum', 'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'bpv': 'first',
-                                         'vol': 'sum'}).reset_index()
+                                         'vol': 'sum', 'n_sess': 'max'}).reset_index()
         # daily timeframe
         if timeframe == 'Daily':
             df['date'] = df['date'].dt.date
@@ -434,28 +439,40 @@ class Dashboard:
         df = self.df.copy()
         #
         def _define_metric(df, metric):
+            # close
             if metric == 'Close':
                 df['metric'] = df['close']
+            # difference between consecutive closes
             elif metric == 'Delta close':
                 df['metric'] = df['close'] - df['close'].shift(1)
+                # set `delta` to 0 when the session changes
+                if self.timeframe in ['5m', '15m', '30m', '60m', '120m', '240m', '480m']:
+                    df.loc[df['n_sess'] != df['n_sess'].shift(1), 'metric'] = 0
+            # body
             elif metric == 'Body':
                 df['metric'] = df['close'] - df['open']
+            # range
             elif metric == 'Range':
                 df['metric'] = df['high'] - df['low']
+            # difference open-high
             elif metric == 'Open-high':
                 df['metric'] = df['high'] - df['open']
+            # difference open-low
             elif metric == 'Open-low':
                 df['metric'] = df['open'] - df['low']
+            # number of times there is a maximum
             elif metric == 'Num highs':
                 df['date_temp'] = df['date'].dt.date
                 df.loc[df.groupby('date_temp').agg({'high': 'idxmax'})['high'].values, 'high_sess'] = 1
                 df['high_sess'] = df['high_sess'].fillna(0).astype(int)
                 df['metric'] = df['high_sess']
+            # number of times there is a minimum
             elif metric == 'Num lows':
                 df['date_temp'] = df['date'].dt.date
                 df.loc[df.groupby('date_temp').agg({'low': 'idxmin'})['low'].values, 'low_sess'] = 1
                 df['low_sess'] = df['low_sess'].fillna(0).astype(int)
                 df['metric'] = df['low_sess']
+            # number of times there is a maximum/minimum
             elif metric == 'Num highs or lows':
                 df['date_temp'] = df['date'].dt.date
                 df.loc[df.groupby('date_temp').agg({'high': 'idxmax'})['high'].values, 'high_sess'] = 1
@@ -463,8 +480,10 @@ class Dashboard:
                 df['high_sess'] = df['high_sess'].fillna(0).astype(int)
                 df['low_sess'] = df['low_sess'].fillna(0).astype(int)
                 df['metric'] = df['high_sess'] + df['low_sess']
+            # volume
             elif metric == 'Volume':
                 df['metric'] = df['vol']
+            #
             return df['metric'].values
         
         # get metric
