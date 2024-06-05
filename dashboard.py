@@ -764,7 +764,7 @@ class Dashboard:
                     else:
                         figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                     y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
-                                                    name = f'{breakdown}', mode = 'lines', hovertemplate = '%{x|%m-%d %H:%M:%S}'))
+                                                    name = f'{breakdown}', mode = 'lines', hovertemplate = 'Day %{x|%d}: {x|%H:%M:%S}'))
         elif dashboard.plot_type == 'Bars':
             if dashboard.col_color is None:
                 figure.add_trace(go.Bar(x = df[dashboard.col_x], y = df['Metric'], width = 0.5, offset = -0.5))
@@ -777,7 +777,7 @@ class Dashboard:
                     else:
                         figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                     y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
-                                                    name = f'{breakdown}', width = 0.5, offset = -0.5, hovertemplate = '%{x|%m-%d %H:%M:%S}'))
+                                                    name = f'{breakdown}', width = 0.5, offset = -0.5, hovertemplate = 'Day %{x|%d}: {x|%H:%M:%S}'))
         return figure
 
     def _plot_time_1_metric(self, figure):
