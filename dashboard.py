@@ -755,10 +755,12 @@ class Dashboard:
             if dashboard.col_color is None:
                 figure.add_trace(go.Scatter(x = df[dashboard.col_x], y = df['Metric'], mode = 'lines'))
             else:
+                st.write(df)
                 for breakdown in df[dashboard.col_color].unique():
+                    st.write(brekdown)
                     figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                 y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
-                                                name = f'{breakdown}', mode = 'lines', hovertemplate='xxx'))
+                                                name = f'{breakdown}', mode = 'lines', hovertemplate='Time: %{x|%H:%M}<br>Mean Close Price: %{y:.2f}<extra></extra>'))
         elif dashboard.plot_type == 'Bars':
             if dashboard.col_color is None:
                 figure.add_trace(go.Bar(x = df[dashboard.col_x], y = df['Metric'], width = 0.5, offset = -0.5))
