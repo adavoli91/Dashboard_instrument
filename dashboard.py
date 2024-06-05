@@ -653,7 +653,7 @@ class Dashboard:
                 df['weekday'] = df['weekday'].replace({value: key for key, value in self.dict_day_of_week.items()})
             if 'month' in df.columns:
                 df['month'] = df['month'].replace({value: key for key, value in self.dict_month.items()})
-            #
+            # group by month, day of month and time (i.e., to study seasonalities)
             if self.col_x == 'day_of_month_time':        
                 df['day of month'] = pd.to_datetime('2000-01-' + df['day_of_month'].astype(str).str.zfill(2) + ' ' + df['time'].astype(str))
                 df = df.drop('time', axis = 1)
@@ -755,20 +755,28 @@ class Dashboard:
             if dashboard.col_color is None:
                 figure.add_trace(go.Scatter(x = df[dashboard.col_x], y = df['Metric'], mode = 'lines'))
             else:
-                st.write(df)
                 for breakdown in df[dashboard.col_color].unique():
-                    st.write(breakdown)
-                    figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
-                                                y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
-                                                name = f'{breakdown}', mode = 'lines', hovertemplate='Time: %{x|%H:%M}<br>Mean Close Price: %{y:.2f}<extra></extra>'))
+                    if dashboard.col_x != 'day_of_month_time':
+                        figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
+                                                    y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
+                                                    name = f'{breakdown}', mode = 'lines'))
+                    else:
+                        figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
+                                                    y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
+                                                    name = f'{breakdown}', mode = 'lines', hovertemplate = '%{x|%H:%M:%S}'))
         elif dashboard.plot_type == 'Bars':
             if dashboard.col_color is None:
                 figure.add_trace(go.Bar(x = df[dashboard.col_x], y = df['Metric'], width = 0.5, offset = -0.5))
             else:
                 for breakdown in df[dashboard.col_color].unique():
-                    figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
-                                                y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
-                                                name = f'{breakdown}', width = 0.5, offset = -0.5))
+                    if dashboard.col_x != 'day_of_month_time':
+                        figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
+                                                    y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
+                                                    name = f'{breakdown}', width = 0.5, offset = -0.5))
+                    else:
+                        figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
+                                                    y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
+                                                    name = f'{breakdown}', width = 0.5, offset = -0.5, hovertemplate = '%{x|%H:%M:%S}'))
         return figure
 
     def _plot_time_1_metric(self, figure):
