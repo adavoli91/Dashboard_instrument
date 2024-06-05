@@ -145,7 +145,7 @@ class Dashboard:
         # sidebar - filter month
         filt_month = st.sidebar.multiselect(label = 'Months to exclude:',
                                             options = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
-    self.filt_month = filt_month
+        self.filt_month = filt_month
 
     def _get_day_of_month_filter(self):
         '''
