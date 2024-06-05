@@ -57,6 +57,12 @@ class Dashboard:
                                 'EC': '14:00:00', 'ES': '15:00:00', 'FC': '13:00:00', 'FDAX': '22:00:00', 'GC': '13:30:00', 'HG': '13:00:00', 'HO': '14:30:00',
                                 'LC': '13:00:00', 'LH': '13:00:00', 'NG': '14:30:00', 'NQ': '15:00:00', 'PL': '13:05:00', 'RB': '14:30:00', 'RTY': '15:00:00',
                                 'S': '13:15:00', 'SI': '13:25:00', 'TY': '15:00:00', 'US': '14:00:00', 'VX': '15:00:00', 'YM': '14:00:00'}
+        dict_rth = {'AD': ['07:20:00', '14:00:00'], 'BP': ['07:20:00', '14:00:00'], 'C': ['08:30:00', '13:20:00'], 'CD': ['07:20:00', '14:00:00'],
+                    'CL': ['09:00:00', '14:30:00'], 'EC': ['07:20:00', '14:00:00'], 'ES': ['08:30:00', '15:15:00'], 'FDAX': ['08:00:00', '22:00:00'],
+                    'GC': ['08:20:00', '13:30:00'], 'HG': ['08:10:00', '13:00:00'], 'HO': ['09:00:00', '14:30:00'], 'NG': ['09:00:00', '14:30:00'],
+                    'NQ': ['08:30:00', '15:15:00'], 'PL': ['08:20:00', '13:05:00'], 'RB': ['09:00:00', '14:30:00'], 'RTY': ['08:30:00', '15:15:00'],
+                    'S': ['08:30:00', '13:20:00'], 'SI': ['08:25:00', '13:25:00'], 'TY': ['08:30:00', '15:15:00'],
+                    'US': ['08:30:00', '15:15:00'], 'VX': ['08:30:00', '15:15:00'], 'YM': ['08:30:00', '15:15:00']}
         dict_month = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
         dict_day_of_week = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
         #
@@ -71,6 +77,7 @@ class Dashboard:
         #
         self.dict_sess = dict_sess
         self.dict_settlement_hour = dict_settlement_hour
+        self.dict_rth = dict_rth
         self.dict_month = dict_month
         self.dict_day_of_week = dict_day_of_week
         self.instrument = instrument
@@ -90,7 +97,7 @@ class Dashboard:
         self._select_group_strategy()
         self._select_group_function()
         self._select_unit()
-        self._highlight_trading_sessions()
+        self._highlight_trading_sessions_rth()
         if self.n_metrics == 1:
             self._get_tops_bottoms()
 
@@ -281,9 +288,9 @@ class Dashboard:
         unit = st.sidebar.radio(label = 'Unit:', options = ['Points', '$'], horizontal = True)
         self.unit = unit.lower()
                 
-    def _highlight_trading_sessions(self):
+    def _highlight_trading_sessions_rth(self):
         '''
-        Function to decide wheter to highlight trading sessions, when `Time` is the variable on the x-axis.
+        Function to decide wheter to highlight trading sessions or regular trading session, when `Time` is the variable on the x-axis.
 
         Args: None.
 
@@ -292,8 +299,12 @@ class Dashboard:
         self._plot_trading_sessions = None
         sess_start, sess_end = self.dict_sess[self.instrument]
         if (((sess_start == '17:00:00') and (sess_end == '16:00:00')) or ((sess_start == '18:00:00') and (sess_end == '17:00:00')) or
-            (self.instrument == 'FDAX')):
+            (self.instrument == 'FDAX')) and (self.timeframe in ['1m', '5m', '15m', '30m', '60m']):
             self._plot_trading_sessions = st.sidebar.radio(label = 'Highlight trading sessions', options = ['Yes', 'No'], horizontal = True)
+        if self.instrument in self.dict_rth.keys():
+            self._plot_rth = st.sidebar.radio(label = 'Highlight regular trading hours', options = ['No', 'Yes'], horizontal = True)
+        if self._plot_trading_sessions == True:
+            self._plot_rth = False
 
     def _get_tops_bottoms(self):
         '''
@@ -745,6 +756,8 @@ class Dashboard:
         if 'Time' in df.columns:
             if self._plot_trading_sessions == 'Yes':
                 figure = self._plot_rect_session_1_metric(figure)
+            if self._plot_rth == 'Yes':
+                figure = self._plot_rect_rth_1_metric(figure)
             #
             df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
                                     'y': [df['Metric'].max() - 0.12*(df['Metric'].max() - df['Metric'].min())]})
@@ -798,6 +811,28 @@ class Dashboard:
             figure.add_vrect(x0 = '15:00:00', x1 = '22:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '19:00:00', y = df['Metric'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
         return figure
+    
+    def _plot_rect_rth_1_metric(self, figure):
+        '''
+        Function to plot a rectangle indicating regular trading hour. It is called by the function `_plot_time_1_metric`.
+
+        Args:
+            figure: Figure built by the function `_plot`.
+
+        Returns: None.
+        '''
+        df = self.df.copy()
+        first_time = self.dict_rth[self.instrument][0]
+        second_time = self.dict_rth[self.instrument][1]
+        #
+        first_time_conv = datetime.strptime(first_time, '%H:%M:%S')
+        second_time_conv = datetime.strptime(second_time, '%H:%M:%S')
+        #
+        figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= first_time)[0].min() - 1, 'Time'],
+                         x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
+                         fillcolor = 'cyan', opacity = 0.15, line_width = 0)
+        figure.add_annotation(x = (first_time_conv + (second_time_conv - first_time_conv)/2).strftime('%H:%M:%S'), y = df['Metric'].min()*1.1,
+                              text = 'Regular trading hours', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
     
     def _plot_tops_bottoms(self):
         '''
@@ -917,6 +952,8 @@ class Dashboard:
         if 'Time' in df.columns:
             if self._plot_trading_sessions == 'Yes':
                 figure = self._plot_rect_session_2_metrics(figure)
+            if self._plot_rth == 'Yes':
+                figure = self._plot_rect_rth_2_metrics(figure)
             #
             df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
                                     'y': [df['Metric_1'].max() - 0.12*(df['Metric_1'].max() - df['Metric_1'].min())]})
@@ -1030,6 +1067,33 @@ class Dashboard:
             figure.add_annotation(x = '19:00:00', y = df['Metric_2'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                              row = 2, col = 1)
         return figure
+    
+    def _plot_rect_rth_2_metrics(self, figure):
+        '''
+        Function to plot a rectangle indicating regular trading hour. It is called by the function `_plot_time_1_metric`.
+
+        Args:
+            figure: Figure built by the function `_plot`.
+
+        Returns: None.
+        '''
+        df = self.df.copy()
+        first_time = self.dict_rth[self.instrument][0]
+        second_time = self.dict_rth[self.instrument][1]
+        #
+        first_time_conv = datetime.strptime(first_time, '%H:%M:%S')
+        second_time_conv = datetime.strptime(second_time, '%H:%M:%S')
+        #
+        figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= first_time)[0].min() - 1, 'Time'],
+                         x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
+                         fillcolor = 'cyan', opacity = 0.15, line_width = 0, row = 1, col = 1)
+        figure.add_annotation(x = (first_time_conv + (second_time_conv - first_time_conv)/2).strftime('%H:%M:%S'), y = df['Metric'].min()*1.1,
+                              text = 'Regular trading hours', font = {'size': 18, 'color': 'white'}, yanchor = 'top', row = 1, col = 1)
+        figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= first_time)[0].min() - 1, 'Time'],
+                         x1 = df.loc[np.where(df['Time'] <= second_time)[0].max(), 'Time'],
+                         fillcolor = 'cyan', opacity = 0.15, line_width = 0, row = 2, col = 1)
+        figure.add_annotation(x = (first_time_conv + (second_time_conv - first_time_conv)/2).strftime('%H:%M:%S'), y = df['Metric'].min()*1.1,
+                              text = 'Regular trading hours', font = {'size': 18, 'color': 'white'}, yanchor = 'top', row = 2, col = 1)
 
 if __name__ == '__main__':
     # login
