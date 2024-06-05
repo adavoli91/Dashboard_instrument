@@ -757,7 +757,7 @@ class Dashboard:
             else:
                 st.write(df)
                 for breakdown in df[dashboard.col_color].unique():
-                    st.write(brekdown)
+                    st.write(breakdown)
                     figure.add_trace(go.Scatter(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                 y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
                                                 name = f'{breakdown}', mode = 'lines', hovertemplate='Time: %{x|%H:%M}<br>Mean Close Price: %{y:.2f}<extra></extra>'))
