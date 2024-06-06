@@ -316,8 +316,8 @@ class Dashboard:
                 self._plot_trading_sessions = st.sidebar.radio(label = 'Highlight trading sessions', options = ['Yes', 'No'], horizontal = True)
             if self.instrument in self.dict_rth.keys():
                 self._plot_rth = st.sidebar.radio(label = 'Highlight regular trading hours', options = ['No', 'Yes'], horizontal = True)
-            if self._plot_trading_sessions == True:
-                self._plot_rth = False
+            if self._plot_trading_sessions == 'Yes':
+                self._plot_rth = 'No'
 
     def _get_tops_bottoms(self):
         '''
