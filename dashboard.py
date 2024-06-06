@@ -831,6 +831,7 @@ class Dashboard:
         #
         start_sess = self.dict_sess[dashboard.instrument][0]
         if start_sess == '17:00:00':
+            st.write(df)
             figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min() - 1, 'Time'],
                              x1 = df.loc[np.where(df['Time'] <= '23:59:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             # figure.add_annotation(x = '20:30:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
