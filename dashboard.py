@@ -219,6 +219,7 @@ class Dashboard:
             # sidebar - filter time
             self.filter_time = st.sidebar.select_slider(label = 'Time range:', options = range_times, value = [range_times[0], range_times[-1]])
             #
+            self.sess_start = sess_start
             self.sess_end = sess_end
 
     def _select_number_of_metrics(self):
@@ -527,7 +528,7 @@ class Dashboard:
         self.col_color = None
         #
         if self.group_by is not None:
-            df['time'] = df['date'].dt.time
+            df['time'] = (df['date'] - pd.Timedelta(self.sess_start.split(':')[0], unit = 'h')).dt.time
             df['weekday'] = df['date'].dt.weekday
             df['day_of_month'] = df['date'].dt.day
             df['month'] = df['date'].dt.month
