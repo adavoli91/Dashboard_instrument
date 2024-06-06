@@ -528,6 +528,7 @@ class Dashboard:
         self.col_color = None
         #
         if self.group_by is not None:
+            # shift time so that session begin corresponds to 00:00:00. It will be fixed later in the code
             df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
             df['weekday'] = df['date'].dt.weekday
             df['day_of_month'] = df['date'].dt.day
@@ -735,11 +736,11 @@ class Dashboard:
         n_digits = 0
         if np.diff(df['Metric'].drop_duplicates().sort_values().values[:2])[0] > 0:
             n_digits = len(decimal.Decimal(round(1/np.diff(df['Metric'].drop_duplicates().sort_values().values[:2])[0])).as_tuple().digits)
-        #
+        # add unit to y axis label
         label_y = self.metric
         if label_y in ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low']:
             label_y += f' [{self.unit}]'
-        #
+        # shift time back to original values: this way, the first row corresponds to session start
         if dashboard.col_x == 'Time':
             df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time'].astype(str)) +
                           pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
@@ -782,6 +783,7 @@ class Dashboard:
                         figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                     y = df.loc[df[dashboard.col_color] == breakdown, 'Metric'],
                                                     name = f'{breakdown}', width = 0.5, offset = -0.5, hovertemplate = 'Day %{x|%d}: %{x|%H:%M:%S}'))
+        self.df = df
         return figure
 
     def _plot_time_1_metric(self, figure):
@@ -934,13 +936,17 @@ class Dashboard:
             n_digits_1 = len(decimal.Decimal(round(1/np.diff(df['Metric_1'].drop_duplicates().sort_values().values[:2])[0])).as_tuple().digits)
         if np.diff(df['Metric_2'].drop_duplicates().sort_values().values[:2])[0] > 0:
             n_digits_2 = len(decimal.Decimal(round(1/np.diff(df['Metric_2'].drop_duplicates().sort_values().values[:2])[0])).as_tuple().digits)
-        #
+        # add units to y axis labels
         label_y_1 = self.metric[0]
         label_y_2 = self.metric[1]
         if label_y_1 in ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low']:
             label_y_1 += f' [{self.unit}]'
         if label_y_2 in ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low']:
             label_y_2 += f' [{self.unit}]'
+        # shift time back to original values: this way, the first row corresponds to session start
+        if dashboard.col_x == 'Time':
+            df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time'].astype(str)) +
+                          pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
         #
         figure = go.Figure()
         figure = make_subplots(rows = 2, cols = 1, shared_xaxes = True)
@@ -979,6 +985,7 @@ class Dashboard:
                     figure.add_trace(go.Bar(x = df.loc[df[dashboard.col_color] == breakdown, dashboard.col_x],
                                                 y = df.loc[df[dashboard.col_color] == breakdown, 'Metric_2'],
                                                 name = f'{breakdown}', width = 0.5, offset = -0.5), row = 2, col = 1)
+        self.df = df
         return figure
 
     def _plot_time_2_metrics(self, figure):
