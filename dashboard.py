@@ -744,6 +744,7 @@ class Dashboard:
         if dashboard.col_x == 'Time':
             df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time'].astype(str)) +
                           pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
+            df['Time'] = df['Time'].astype(str)
         #
         figure = go.Figure()
         figure.update_layout(go.Layout(margin = dict(l = 20, r = 20, t = 20, b = 20), template = 'simple_white', showlegend = False,
