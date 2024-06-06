@@ -740,6 +740,10 @@ class Dashboard:
         if label_y in ['Close', 'Delta close', 'Body', 'Range', 'Open-high', 'Open-low']:
             label_y += f' [{self.unit}]'
         #
+        if dashboard.col_x == 'Time':
+            df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time'].astype(str)) +
+                          pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
+        #
         figure = go.Figure()
         figure.update_layout(go.Layout(margin = dict(l = 20, r = 20, t = 20, b = 20), template = 'simple_white', showlegend = False,
                                        xaxis = {'showgrid': True, 'showline': True, 'mirror': True, 'titlefont': {'size': 20}, 'tickfont': {'size': 16},
