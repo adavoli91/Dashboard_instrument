@@ -528,7 +528,7 @@ class Dashboard:
         self.col_color = None
         #
         if self.group_by is not None:
-            df['time'] = (df['date'] - pd.Timedelta(self.sess_start.split(':')[0], unit = 'h')).dt.time
+            df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
             df['weekday'] = df['date'].dt.weekday
             df['day_of_month'] = df['date'].dt.day
             df['month'] = df['date'].dt.month
