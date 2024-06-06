@@ -831,21 +831,18 @@ class Dashboard:
         #
         start_sess = self.dict_sess[dashboard.instrument][0]
         if start_sess == '17:00:00':
-            st.write(df)
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'],
-                             x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15, line_width = 0)
-            # figure.add_annotation(x = '20:30:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
-            # figure.add_vrect(x0 = '17:00:00', x1 = '23:59:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'], x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0)
+            figure.add_vrect(x0 = '00:00:00', x1 = '01:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '21:00:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '01:00:00', x1 = '08:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '04:30:00', y = df['Metric'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '08:00:00', x1 = '16:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '12:00:00', y = df['Metric'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
         if start_sess == '18:00:00':
-            # figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min() - 1, 'Time'],
-            #                  x1 = df.loc[np.where(df['Time'] <= '24:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0)
-            # figure.add_annotation(x = '22:00:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
-            figure.add_vrect(x0 = '18:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min(), 'Time'], x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0)
+            figure.add_vrect(x0 = '00:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '22:00:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '02:00:00', x1 = '09:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '05:30:00', y = df['Metric'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
@@ -1046,81 +1043,77 @@ class Dashboard:
         #
         start_sess = self.dict_sess[dashboard.instrument][0]
         if start_sess == '17:00:00':
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min() - 1, 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '23:59:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
-                             row = 1, col = 1)
-            figure.add_annotation(x = '20:30:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                                  row = 1, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'], x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0, row = 1, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '01:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 1, col = 1)
+            figure.add_annotation(x = '21:00:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
+                                  row = 1, col = 1)
             figure.add_vrect(x0 = '01:00:00', x1 = '08:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '04:30:00', y = df['Metric_1'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             figure.add_vrect(x0 = '08:00:00', x1 = '16:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '12:00:00', y = df['Metric_1'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             #
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min() - 1, 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '23:59:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
-                             row = 2, col = 1)
-            figure.add_annotation(x = '20:30:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                                  row = 2, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'], x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0, row = 2, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '01:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 2, col = 1)
+            figure.add_annotation(x = '21:00:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
+                                  row = 2, col = 1)
             figure.add_vrect(x0 = '01:00:00', x1 = '08:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '04:30:00', y = df['Metric_2'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
             figure.add_vrect(x0 = '08:00:00', x1 = '16:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '12:00:00', y = df['Metric_2'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
         if start_sess == '18:00:00':
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min() - 1, 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '24:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
-                             row = 1, col = 1)
-            figure.add_annotation(x = '22:00:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min(), 'Time'], x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0, row = 1, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 1, col = 1)
+            figure.add_annotation(x = '22:00:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
+                                  row = 1, col = 1)
             figure.add_vrect(x0 = '02:00:00', x1 = '09:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '05:30:00', y = df['Metric_1'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             figure.add_vrect(x0 = '09:00:00', x1 = '17:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '13:00:00', y = df['Metric_1'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             #
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min() - 1, 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '24:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
-                             row = 2, col = 1)
-            figure.add_annotation(x = '22:00:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min(), 'Time'], x1 = df['Time'].max(), fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0, row = 2, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 2, col = 1)
+            figure.add_annotation(x = '22:00:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
+                                  row = 2, col = 1)
             figure.add_vrect(x0 = '02:00:00', x1 = '09:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '05:30:00', y = df['Metric_2'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
             figure.add_vrect(x0 = '09:00:00', x1 = '17:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '13:00:00', y = df['Metric_2'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
         if dashboard.instrument == 'FDAX':
             figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= '01:10:00')[0].min() - 1, 0), 'Time'],
                              x1 = df.loc[np.where(df['Time'] <= '08:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
                              row = 1, col = 1)
             figure.add_annotation(x = '04:30:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             figure.add_vrect(x0 = '08:00:00', x1 = '15:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '11:30:00', y = df['Metric_1'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             figure.add_vrect(x0 = '15:00:00', x1 = '22:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '19:00:00', y = df['Metric_1'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 1, col = 1)
+                                  row = 1, col = 1)
             #
             figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= '01:10:00')[0].min() - 1, 0), 'Time'],
                              x1 = df.loc[np.where(df['Time'] <= '08:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
                              row = 2, col = 1)
             figure.add_annotation(x = '04:30:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
             figure.add_vrect(x0 = '08:00:00', x1 = '15:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '11:30:00', y = df['Metric_2'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
             figure.add_vrect(x0 = '15:00:00', x1 = '22:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '19:00:00', y = df['Metric_2'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
-                             row = 2, col = 1)
+                                  row = 2, col = 1)
         return figure
     
     def _plot_rect_rth_2_metrics(self, figure):
