@@ -830,10 +830,10 @@ class Dashboard:
         #
         start_sess = self.dict_sess[dashboard.instrument][0]
         if start_sess == '17:00:00':
-            # figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min() - 1, 'Time'],
-            #                  x1 = df.loc[np.where(df['Time'] <= '23:59:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min() - 1, 'Time'],
+                             x1 = df.loc[np.where(df['Time'] <= '23:59:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             # figure.add_annotation(x = '20:30:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
-            figure.add_vrect(x0 = '17:00:00', x1 = '23:59:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
+            # figure.add_vrect(x0 = '17:00:00', x1 = '23:59:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '21:00:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '01:00:00', x1 = '08:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '04:30:00', y = df['Metric'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
@@ -1033,7 +1033,7 @@ class Dashboard:
     
     def _plot_rect_session_2_metrics(self, figure):
         '''
-        Function to plot rectangles indicating Asian, European and American trading sessions. It is called by the function `_plot_time_1_metric`.
+        Function to plot rectangles indicating Asian, European and American trading sessions. It is called by the function `_plot_time_2_metrics`.
 
         Args:
             figure: Figure built by the function `_plot`.
@@ -1123,7 +1123,7 @@ class Dashboard:
     
     def _plot_rect_rth_2_metrics(self, figure):
         '''
-        Function to plot a rectangle indicating regular trading hour. It is called by the function `_plot_time_1_metric`.
+        Function to plot a rectangle indicating regular trading hour. It is called by the function `_plot_time_2_metrics`.
 
         Args:
             figure: Figure built by the function `_plot`.
