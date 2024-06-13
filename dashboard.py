@@ -530,9 +530,17 @@ class Dashboard:
         if self.group_by is not None:
             # shift time so that session begin corresponds to 00:00:00. It will be fixed later in the code
             df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
-            df['weekday'] = df['date'].dt.weekday
+            # weekday. notice: the weekday indicates the day of the week when the session starts
+            # df['weekday'] = df['date'].dt.weekday
+            df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
+            df['weekday'] = df['weekday'].ffill()
+            df = df[~df['weekday'].isnull()].reset_index(drop = True)
+            df['weekday'] = df['weekday'].astype(int)
+            # day of month
             df['day_of_month'] = df['date'].dt.day
+            # month
             df['month'] = df['date'].dt.month
+            # all history
             df['history'] = df['date']
             # define grouping criterion
             if self.group_by == 'Time':
@@ -545,6 +553,7 @@ class Dashboard:
                 self.col_x = 'time'
                 self.col_color = 'weekday'
                 self.format_x = '%H:%M:%S'
+                st.write('Notice: the day of week as to be interpreted as the day of the week when the session starts.')
             if self.group_by == 'Day of month + time':
                 self.group_cols = ['day_of_month', 'time']
                 self.col_x = 'time'
@@ -570,6 +579,7 @@ class Dashboard:
                 self.col_x = 'history'
                 self.col_color = 'weekday'
                 self.format_x = '%Y-%m-%d %H:%M:%S'
+                st.write('Notice: the day of week as to be interpreted as the day of the week when the session starts.')
             if self.group_by == 'Day of month + history':
                 self.group_cols = ['day_of_month', 'history']
                 self.col_x = 'history'
