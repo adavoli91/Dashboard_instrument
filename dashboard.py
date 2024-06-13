@@ -465,7 +465,7 @@ class Dashboard:
             elif metric == 'Delta close':
                 df['metric'] = df['close'] - df['close'].shift(1)
                 # set `delta` to 0 when the session changes
-                if self.timeframe in ['5m', '15m', '30m', '60m', '120m', '240m', '480m']:
+                if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
                     df.loc[df['n_sess'] != df['n_sess'].shift(1), 'metric'] = 0
             # body
             elif metric == 'Body':
@@ -562,7 +562,7 @@ class Dashboard:
                 self.col_x = 'time'
                 self.col_color = 'weekday'
                 self.format_x = '%H:%M:%S'
-                st.write('Notice: the day of week as to be interpreted as the day of the week when the session starts.')
+                st.write('Notice: the day of week has to be interpreted as the day of the week when the session starts.')
             if self.group_by == 'Day of month + time':
                 self.group_cols = ['day_of_month', 'time']
                 self.col_x = 'time'
@@ -588,7 +588,7 @@ class Dashboard:
                 self.col_x = 'history'
                 self.col_color = 'weekday'
                 self.format_x = '%Y-%m-%d %H:%M:%S'
-                st.write('Notice: the day of week as to be interpreted as the day of the week when the session starts.')
+                st.write('Notice: the day of week has to be interpreted as the day of the week when the session starts.')
             if self.group_by == 'Day of month + history':
                 self.group_cols = ['day_of_month', 'history']
                 self.col_x = 'history'
