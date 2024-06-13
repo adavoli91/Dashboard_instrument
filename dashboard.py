@@ -357,8 +357,7 @@ class Dashboard:
         if len(self.filt_month) > 0:
             dict_month = self.dict_month
             self.filt_month = [dict_month[i] for i in self.filt_month]
-            df['month'] = df['date'].dt.month
-            self.df = df[~df['month'].isin(self.filt_month)].drop('month', axis = 1).reset_index(drop = True)
+            self.df = df[~df['month'].isin(self.filt_month)].reset_index(drop = True)
 
     def _filter_day_of_month(self):
         '''
@@ -370,8 +369,7 @@ class Dashboard:
         '''
         df = self.df.copy()
         if len(self.filt_day_month) > 0:
-            df['day'] = df['date'].dt.day
-            self.df = df[~df['day'].isin(self.filt_day_month)].drop('day', axis = 1).reset_index(drop = True)
+            self.df = df[~df['day_of_month'].isin(self.filt_day_month)].reset_index(drop = True)
 
     def _filter_day_of_week(self):
         '''
@@ -385,8 +383,7 @@ class Dashboard:
         if len(self.filt_day_week) > 0:
             dict_day_of_week = self.dict_day_of_week
             self.filt_day_week = [dict_day_of_week[i] for i in self.filt_day_week]
-            df['day_of_week'] = df['date'].dt.dayofweek
-            self.df = df[~df['day_of_week'].isin(self.filt_day_week)].drop('day_of_week', axis = 1).reset_index(drop = True)
+            self.df = df[~df['weekday'].isin(self.filt_day_week)].reset_index(drop = True)
 
     def _filter_times(self):
         '''
