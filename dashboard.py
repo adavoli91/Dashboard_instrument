@@ -76,7 +76,6 @@ class Dashboard:
         plot_type = st.sidebar.radio(label = 'Plot type:', options = ['Lines', 'Bars'], horizontal = True)
         #
         self.dict_sess = dict_sess
-        self.sess_start, self.sess_end = dict_sess[instrument]
         self.dict_settlement_hour = dict_settlement_hour
         self.dict_rth = dict_rth
         self.dict_month = dict_month
@@ -186,20 +185,6 @@ class Dashboard:
         df.loc[df['session_start'] == True, 'n_sess'] = range(df['session_start'].sum())
         df['n_sess'] = df['n_sess'].ffill()
         df = df[~df['n_sess'].isnull()].reset_index(drop = True)
-        # shift time so that session begin corresponds to 00:00:00. It will be fixed later in the code
-        df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
-        # weekday. notice: the weekday indicates the day of the week when the session starts
-        df['weekday'] = df['date'].dt.weekday
-        df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
-        df['weekday'] = df['weekday'].ffill()
-        df = df[~df['weekday'].isnull()].reset_index(drop = True)
-        df['weekday'] = df['weekday'].astype(int)
-        # day of month
-        df['day_of_month'] = df['date'].dt.day
-        # month
-        df['month'] = df['date'].dt.month
-        # all history
-        df['history'] = df['date']
         #
         self.df = df
 
@@ -216,7 +201,7 @@ class Dashboard:
         self.filter_time = [None, None]
         #
         if timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
-            sess_start, sess_end = self.sess_start, self.sess_end
+            sess_start, sess_end = self.dict_sess[self.instrument]
             # compute time ranges
             range_times = []
             curr_time = datetime.datetime.strptime(sess_start, '%H:%M:%S')
@@ -233,6 +218,9 @@ class Dashboard:
                 range_times.append('23:59:59')
             # sidebar - filter time
             self.filter_time = st.sidebar.select_slider(label = 'Time range:', options = range_times, value = [range_times[0], range_times[-1]])
+            #
+            self.sess_start = sess_start
+            self.sess_end = sess_end
 
     def _select_number_of_metrics(self):
         '''
@@ -369,6 +357,9 @@ class Dashboard:
         if len(self.filt_month) > 0:
             dict_month = self.dict_month
             self.filt_month = [dict_month[i] for i in self.filt_month]
+            #
+            df['month'] = df['date'].dt.month
+            #
             self.df = df[~df['month'].isin(self.filt_month)].reset_index(drop = True)
 
     def _filter_day_of_month(self):
@@ -381,6 +372,9 @@ class Dashboard:
         '''
         df = self.df.copy()
         if len(self.filt_day_month) > 0:
+            #
+            df['day_of_month'] = df['date'].dt.day
+            #
             self.df = df[~df['day_of_month'].isin(self.filt_day_month)].reset_index(drop = True)
 
     def _filter_day_of_week(self):
@@ -395,6 +389,11 @@ class Dashboard:
         if len(self.filt_day_week) > 0:
             dict_day_of_week = self.dict_day_of_week
             self.filt_day_week = [dict_day_of_week[i] for i in self.filt_day_week]
+            # the weekday indicates the day of the week when the session starts
+            df['weekday'] = df['date'].dt.weekday
+            df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
+            df['weekday'] = df['weekday'].ffill()
+            #
             self.df = df[~df['weekday'].isin(self.filt_day_week)].reset_index(drop = True)
 
     def _filter_times(self):
@@ -537,6 +536,20 @@ class Dashboard:
         self.col_color = None
         #
         if self.group_by is not None:
+            # shift time so that session begin corresponds to 00:00:00. It will be fixed later in the code
+            df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
+            # weekday. notice: the weekday indicates the day of the week when the session starts
+            df['weekday'] = df['date'].dt.weekday
+            df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
+            df['weekday'] = df['weekday'].ffill()
+            df = df[~df['weekday'].isnull()].reset_index(drop = True)
+            df['weekday'] = df['weekday'].astype(int)
+            # day of month
+            df['day_of_month'] = df['date'].dt.day
+            # month
+            df['month'] = df['date'].dt.month
+            # all history
+            df['history'] = df['date']
             # define grouping criterion
             if self.group_by == 'Time':
                 self.group_cols = 'time'
