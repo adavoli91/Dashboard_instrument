@@ -393,6 +393,7 @@ class Dashboard:
             df['weekday'] = df['date'].dt.weekday
             df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
             df['weekday'] = df['weekday'].ffill()
+            df = df[~df['weekday'].isnull()].reset_index(drop = True)
             #
             self.df = df[~df['weekday'].isin(self.filt_day_week)].reset_index(drop = True)
 
