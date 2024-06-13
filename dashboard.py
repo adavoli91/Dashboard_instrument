@@ -531,7 +531,7 @@ class Dashboard:
             # shift time so that session begin corresponds to 00:00:00. It will be fixed later in the code
             df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
             # weekday. notice: the weekday indicates the day of the week when the session starts
-            # df['weekday'] = df['date'].dt.weekday
+            df['weekday'] = df['date'].dt.weekday
             df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
             df['weekday'] = df['weekday'].ffill()
             df = df[~df['weekday'].isnull()].reset_index(drop = True)
