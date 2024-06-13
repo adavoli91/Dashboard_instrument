@@ -532,6 +532,7 @@ class Dashboard:
         Returns: None.
         '''
         df = self.df.copy()
+        # df.to_pickle('./aa.pickle.gz')
         self.col_x = 'date'
         self.format_x = '%Y-%m-%d %H:%M:%S'
         self.col_color = None
@@ -680,6 +681,7 @@ class Dashboard:
                 df = df.drop('time', axis = 1)
                 self.col_x = 'day of month'
             #
+            # df.to_pickle('./aa2.pickle.gz')
             self.df = df
 
     def _adjust_timeframe(self):
