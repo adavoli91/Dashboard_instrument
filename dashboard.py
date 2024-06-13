@@ -76,6 +76,7 @@ class Dashboard:
         plot_type = st.sidebar.radio(label = 'Plot type:', options = ['Lines', 'Bars'], horizontal = True)
         #
         self.dict_sess = dict_sess
+        self.sess_start, self.sess_end = dict_sess[instrument]
         self.dict_settlement_hour = dict_settlement_hour
         self.dict_rth = dict_rth
         self.dict_month = dict_month
@@ -215,7 +216,7 @@ class Dashboard:
         self.filter_time = [None, None]
         #
         if timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
-            sess_start, sess_end = self.dict_sess[self.instrument]
+            sess_start, sess_end = self.sess_start, self.sess_end
             # compute time ranges
             range_times = []
             curr_time = datetime.datetime.strptime(sess_start, '%H:%M:%S')
@@ -232,9 +233,6 @@ class Dashboard:
                 range_times.append('23:59:59')
             # sidebar - filter time
             self.filter_time = st.sidebar.select_slider(label = 'Time range:', options = range_times, value = [range_times[0], range_times[-1]])
-            #
-            self.sess_start = sess_start
-            self.sess_end = sess_end
 
     def _select_number_of_metrics(self):
         '''
