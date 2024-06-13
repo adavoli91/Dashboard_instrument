@@ -542,7 +542,6 @@ class Dashboard:
             df['month'] = df['date'].dt.month
             # all history
             df['history'] = df['date']
-            df.to_pickle('./aa.pickle.gz')
             # define grouping criterion
             if self.group_by == 'Time':
                 self.group_cols = 'time'
