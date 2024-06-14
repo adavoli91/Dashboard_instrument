@@ -1185,10 +1185,10 @@ if __name__ == '__main__':
     if run == True:
         #
         dashboard._filter_dates()
+        dashboard._filter_times()
         dashboard._filter_month()
         dashboard._filter_day_of_month()
         dashboard._filter_day_of_week()
-        dashboard._filter_times()
         #
         dashboard._group_to_timeframe()
         #
