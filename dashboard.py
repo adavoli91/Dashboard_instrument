@@ -409,12 +409,23 @@ class Dashboard:
         #
         if (self.filter_time[0] is not None) and (self.filter_time[1] is not None):
             df['time'] = df['date'].dt.time
+            # define a fake start session as the first time after the initial filtering time
+            df['date_only'] = df['date'].dt.date
+            df_temp = df[df['time'] >= pd.to_datetime(self.filter_time[0]).time()].groupby('date_only').agg({'date': 'first'}).reset_index()
+            df_temp['session_start_fake'] = 1
+            df = df.merge(df_temp, on = ['date_only', 'date'], how = 'left')
+            #
             if self.filter_time[0] < self.filter_time[1]:
-                self.df = df[(df['time'] >= pd.to_datetime(self.filter_time[0]).time()) &
-                             (df['time'] <= pd.to_datetime(self.filter_time[1]).time())].drop('time', axis = 1).reset_index(drop = True)
+                df = df[(df['time'] >= pd.to_datetime(self.filter_time[0]).time()) &
+                        (df['time'] <= pd.to_datetime(self.filter_time[1]).time())].drop('time', axis = 1).reset_index(drop = True)
             else:
-                self.df = df[(df['time'] >= pd.to_datetime(self.filter_time[0]).time()) |
-                             (df['time'] <= pd.to_datetime(self.filter_time[1]).time())].drop('time', axis = 1).reset_index(drop = True)
+                df = df[(df['time'] >= pd.to_datetime(self.filter_time[0]).time()) |
+                        (df['time'] <= pd.to_datetime(self.filter_time[1]).time())].drop('time', axis = 1).reset_index(drop = True)
+            #
+            df['session_start_fake'] = df['session_start_fake'].fillna(0).astype(bool)
+            df = df.drop(['date_only', 'session_start'], axis = 1).rename(columns = {'session_start_fake': 'session_start'})
+            #
+            self.df = df
 
     def _group_to_timeframe(self):
         '''
