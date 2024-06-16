@@ -95,6 +95,7 @@ class Dashboard:
         self._select_number_of_metrics()
         self._select_metric()
         self._select_group_strategy()
+        self._select_split_in_periods()
         self._select_group_function()
         self._select_unit()
         self._highlight_trading_sessions_rth()
@@ -270,11 +271,24 @@ class Dashboard:
         '''
         if self.timeframe in ['1m', '5m', '15m', '30m', '60m', '120m', '240m', '480m']:
             self.group_by = st.sidebar.radio(label = 'Group by:', options = [None, 'Time', 'Day of week + time', 'Day of month + time', 'Month + time',
-                                                                            'Month + day of month + time', 'History', 'Day of week + history',
-                                                                            'Day of month + history', 'Month + history'],
+                                                                             'Month + day of month + time', 'History', 'Day of week + history',
+                                                                             'Day of month + history', 'Month + history'],
                                              horizontal = True)
         else:
             self.group_by = None
+
+    def _select_split_in_periods(self):
+        '''
+        Function to decide whether to show split outputs by (periods of) years.
+
+        Args: None.
+
+        Returns: None.
+        '''
+        self.split_in_periods = 'No'
+        if self.group_by is not None:
+            self.split_in_periods = st.sidebar.radio(label = 'Split in periods:', options = ['No', 'By year', 'By two years', 'By three years'],
+                                                     horizontal = True)
 
     def _select_group_function(self):
         '''
@@ -533,6 +547,46 @@ class Dashboard:
                     df['metric_2'] *= df['bpv']
         #
         self.df = df
+
+    def _add_split_period(self):
+        '''
+        Function to split the years in groups.
+
+        Args: None.
+
+        Returns: None.
+        '''
+        df = self.df.copy()
+        df['period'] = ''
+        #
+        if self.split_in_periods != 'No':
+            df['year'] = df['date'].dt.year
+            list_years = np.arange(df['year'].min(), df['year'].max() + 1)
+            #
+            if self.split_in_periods == 'By year':
+                st.write('The results are splitted by year.')
+                df['period'] = df['year'].astype(str)
+            else:
+                len_list_years = list_years.shape[0]
+                #
+                if self.split_in_periods == 'By two years':
+                    dim_split = 2
+                if self.split_in_periods == 'By three years':
+                    dim_split = 3
+                # group years
+                if len_list_years%dim_split != 0:
+                    list_years = list_years[len_list_years%dim_split:].reshape(-1, dim_split)
+                else:
+                    list_years = list_years.reshape(-1, dim_split)
+                # new labels for groups
+                list_labels = [f'{i[0]}-{i[-1]}' for i in list_years]
+                st.write('The selected periods are: ' + ', '.join(list_labels) + '.')
+                # apply grouping label
+                dict_repl = {list_years[i][j]: list_labels[i] for i in range(list_years.shape[0]) for j in range(list_years.shape[1])}
+                df['period'] = df['year'].replace(dict_repl)
+            # remove years which are not in the list
+            df = df[df['year'] >= list_years.min()].reset_index(drop = True)
+        self.df = df
         
     def _group_data(self):
         '''
@@ -549,66 +603,110 @@ class Dashboard:
         #
         if self.group_by is not None:
             # shift time so that session begin corresponds to 00:00:00. It will be fixed later in the code
-            df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
+            df['time'] = (df['date'] - pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time.astype(str)
             # weekday. notice: the weekday indicates the day of the week when the session starts
             df['weekday'] = df['date'].dt.weekday
             df = df.drop('weekday', axis = 1).merge(df.loc[df['session_start'] == True, ['date', 'weekday']], on = 'date', how = 'left')
             df['weekday'] = df['weekday'].ffill()
             df = df[~df['weekday'].isnull()].reset_index(drop = True)
-            df['weekday'] = df['weekday'].astype(int)
+            df['weekday'] = df['weekday'].astype(int).replace({value: key for key, value in self.dict_day_of_week.items()})
             # day of month
-            df['day_of_month'] = df['date'].dt.day
+            df['day_of_month'] = df['date'].dt.day.astype(str)
             # month
-            df['month'] = df['date'].dt.month
+            df['month'] = df['date'].dt.month.replace({value: key for key, value in self.dict_month.items()})
             # all history
-            df['history'] = df['date']
+            df['history'] = df['date'].astype(str)
             # define grouping criterion
             if self.group_by == 'Time':
-                self.group_cols = 'time'
+                # df.to_pickle('./aa.pickle.gz')
+                if self.split_in_periods == 'No':
+                    self.group_cols = 'time'
+                    self.col_color = None
+                else:
+                    self.group_cols = ['period', 'time']
+                    self.col_color = 'period'
                 self.col_x = 'time'
-                self.col_color = None
                 self.format_x = '%H:%M:%S'
             if self.group_by == 'Day of week + time':
-                self.group_cols = ['weekday', 'time']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['weekday', 'time']
+                    self.col_color = 'weekday'
+                else:
+                    self.group_cols = ['weekday', 'period', 'time']
+                    df['period'] = df['weekday'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'time'
-                self.col_color = 'weekday'
                 self.format_x = '%H:%M:%S'
                 st.write('Notice: the day of week has to be interpreted as the day of the week when the session starts.')
             if self.group_by == 'Day of month + time':
-                self.group_cols = ['day_of_month', 'time']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['day_of_month', 'time']
+                    self.col_color = 'day_of_month'
+                else:
+                    self.group_cols = ['day_of_month', 'period', 'time']
+                    df['period'] = df['day_of_month'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'time'
-                self.col_color = 'day_of_month'
                 self.format_x = '%H:%M:%S'
             if self.group_by == 'Month + time':
-                self.group_cols = ['month', 'time']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['month', 'time']
+                    self.col_color = 'month'
+                else:
+                    self.group_cols = ['month', 'period', 'time']
+                    df['period'] = df['month'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'time'
-                self.col_color = 'month'
                 self.format_x = '%H:%M:%S'
             if self.group_by == 'Month + day of month + time':
-                self.group_cols = ['month', 'day_of_month', 'time']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['month', 'day_of_month', 'time']
+                    self.col_color = 'month'
+                else:
+                    self.group_cols = ['month', 'period', 'day_of_month', 'time']
+                    df['period'] = df['month'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'day_of_month_time'
-                self.col_color = 'month'
                 self.format_x = '%Y-%m-%d %H:%M:%S'
             if self.group_by == 'History':
-                self.group_cols = 'history'
+                if self.split_in_periods == 'No':
+                    self.group_cols = 'history'
+                    self.col_color = None
+                else:
+                    self.group_cols = ['period', 'history']
+                    self.col_color = 'period'
                 self.col_x = 'history'
-                self.col_color = None
                 self.format_x = '%Y-%m-%d %H:%M:%S'
             if self.group_by == 'Day of week + history':
-                self.group_cols = ['weekday', 'history']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['weekday', 'history']
+                    self.col_color = 'weekday'
+                else:
+                    self.group_cols = ['weekday', 'period', 'history']
+                    df['period'] = df['weekday'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'history'
-                self.col_color = 'weekday'
                 self.format_x = '%Y-%m-%d %H:%M:%S'
                 st.write('Notice: the day of week has to be interpreted as the day of the week when the session starts.')
             if self.group_by == 'Day of month + history':
-                self.group_cols = ['day_of_month', 'history']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['day_of_month', 'history']
+                    self.col_color = 'day_of_month'
+                else:
+                    self.group_cols = ['day_of_month', 'period', 'history']
+                    df['period'] = df['day_of_month'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'history'
-                self.col_color = 'day_of_month'
                 self.format_x = '%Y-%m-%d %H:%M:%S'
             if self.group_by == 'Month + history':
-                self.group_cols = ['month', 'history']
+                if self.split_in_periods == 'No':
+                    self.group_cols = ['month', 'history']
+                    self.col_color = 'month'
+                else:
+                    self.group_cols = ['month', 'period', 'history']
+                    df['period'] = df['month'] + ' - ' + df['period']
+                    self.col_color = 'period'
                 self.col_x = 'history'
-                self.col_color = 'month'
                 self.format_x = '%Y-%m-%d %H:%M:%S'
             # group data: 1 metric
             if type(self.metric) == str:
@@ -681,13 +779,15 @@ class Dashboard:
                         df = df.drop('metric_2', axis = 1).merge(df.groupby(self.col_color).agg({'metric_2': 'cumsum'}), left_index = True,
                                                                  right_index = True).reset_index()
             # if `weekday` or `month` are grouping keys, replace them with the corresponding string value
-            if 'weekday' in df.columns:
-                df['weekday'] = df['weekday'].replace({value: key for key, value in self.dict_day_of_week.items()})
-            if 'month' in df.columns:
-                df['month'] = df['month'].replace({value: key for key, value in self.dict_month.items()})
+            # if 'weekday' in df.columns:
+                # df['weekday'] = df['weekday'].replace({value: key for key, value in self.dict_day_of_week.items()})
+                # df['weekday'] = df['weekday'].apply(lambda x: {str(value): key for key, value in self.dict_day_of_week.items()}[x])
+            # if 'month' in df.columns:
+            #     df['month'] = df['month'].replace({value: key for key, value in self.dict_month.items()})
+                # df['month'] = df['month'].apply(lambda x: {value: key for key, value in self.dict_month.items()}[x])
             # group by month, day of month and time (i.e., to study seasonalities)
             if self.col_x == 'day_of_month_time':        
-                df['day of month'] = pd.to_datetime('2000-01-' + df['day_of_month'].astype(str).str.zfill(2) + ' ' + df['time'].astype(str))
+                df['day of month'] = pd.to_datetime('2000-01-' + df['day_of_month'].str.zfill(2) + ' ' + df['time'])
                 df = df.drop('time', axis = 1)
                 self.col_x = 'day of month'
             #
@@ -772,9 +872,8 @@ class Dashboard:
             label_y += f' [{self.unit}]'
         # shift time back to original values: this way, the first row corresponds to session start
         if dashboard.col_x == 'Time':
-            df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time'].astype(str)) +
+            df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time']) +
                           pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
-            df['Time'] = df['Time'].astype(str)
         #
         figure = go.Figure()
         figure.update_layout(go.Layout(margin = dict(l = 20, r = 20, t = 20, b = 20), template = 'simple_white', showlegend = False,
@@ -830,17 +929,20 @@ class Dashboard:
         df = self.df.copy()
         # add vertical lines i `Time` is a column of `df`
         if 'Time' in df.columns:
-            if self._plot_trading_sessions == 'Yes':
+            if ((self._plot_trading_sessions == 'Yes') and (dashboard.filter_time[0] == dashboard.sess_start) and
+                (dashboard.filter_time[1] == dashboard.sess_end)):
                 figure = self._plot_rect_session_1_metric(figure)
-            if self._plot_rth == 'Yes':
+            if (self._plot_rth == 'Yes') and (dashboard.filter_time[0] == dashboard.sess_start) and (dashboard.filter_time[1] == dashboard.sess_end):
                 figure = self._plot_rect_rth_1_metric(figure)
             #
-            df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
-                                    'y': [df['Metric'].max() - 0.12*(df['Metric'].max() - df['Metric'].min())]})
-            figure.add_vline(x = self.sess_end, line_width = 2, line_dash = 'dash', line_color = 'cyan')
-            figure.add_annotation(x = self.sess_end, y = df_temp['y'].values[0], text = 'End session', font = {'size': 14, 'color': 'cyan'},
-                                  textangle = -90, xshift = 20)
-            if self.instrument in self.dict_settlement_hour.keys():
+            if (dashboard.filter_time[0] == dashboard.sess_start) and (dashboard.filter_time[1] == dashboard.sess_end):
+                df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
+                                        'y': [df['Metric'].max() - 0.12*(df['Metric'].max() - df['Metric'].min())]})
+                figure.add_vline(x = self.sess_end, line_width = 2, line_dash = 'dash', line_color = 'cyan')
+                figure.add_annotation(x = self.sess_end, y = df_temp['y'].values[0], text = 'End session', font = {'size': 14, 'color': 'cyan'},
+                                    textangle = -90, xshift = 20)
+            if ((self.instrument in self.dict_settlement_hour.keys()) and (dashboard.filter_time[0] == dashboard.sess_start) and
+                (dashboard.filter_time[1] == dashboard.sess_end)):
                 df_temp = pd.DataFrame({'settlement': [self.dict_settlement_hour[self.instrument]], 'label': ['Settlement time'],
                                         'y': [df['Metric'].max() - 0.15*(df['Metric'].max() - df['Metric'].min())]})
                 figure.add_vline(x = self.dict_settlement_hour[self.instrument], line_width = 2, line_dash = 'dash', line_color = 'orange')
@@ -861,8 +963,8 @@ class Dashboard:
         #
         start_sess = self.dict_sess[dashboard.instrument][0]
         if start_sess == '17:00:00':
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow', opacity = 0.15,
-                             line_width = 0)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= pd.to_datetime('17:00:00').time())[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow',
+                             opacity = 0.15, line_width = 0)
             figure.add_vrect(x0 = '00:00:00', x1 = '01:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '21:00:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '01:00:00', x1 = '08:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0)
@@ -870,8 +972,8 @@ class Dashboard:
             figure.add_vrect(x0 = '08:00:00', x1 = '16:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '12:00:00', y = df['Metric'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
         if start_sess == '18:00:00':
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow', opacity = 0.15,
-                             line_width = 0)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= pd.to_datetime('18:00:00').time())[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow',
+                             opacity = 0.15, line_width = 0)
             figure.add_vrect(x0 = '00:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '22:00:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '02:00:00', x1 = '09:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0)
@@ -879,8 +981,9 @@ class Dashboard:
             figure.add_vrect(x0 = '09:00:00', x1 = '17:00:00', fillcolor = 'blue', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '13:00:00', y = df['Metric'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
         if dashboard.instrument == 'FDAX':
-            figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= '01:10:00')[0].min() - 1, 0), 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '08:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0)
+            figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= pd.to_datetime('01:10:00').time())[0].min() - 1, 0), 'Time'],
+                             x1 = df.loc[np.where(df['Time'] <= pd.to_datetime('08:00:00').time())[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0)
             figure.add_annotation(x = '04:30:00', y = df['Metric'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
             figure.add_vrect(x0 = '08:00:00', x1 = '15:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0)
             figure.add_annotation(x = '11:30:00', y = df['Metric'].min()*1.1, text = 'Europe', font = {'size': 18, 'color': 'white'}, yanchor = 'top')
@@ -974,9 +1077,8 @@ class Dashboard:
             label_y_2 += f' [{self.unit}]'
         # shift time back to original values: this way, the first row corresponds to session start
         if dashboard.col_x == 'Time':
-            df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time'].astype(str)) +
+            df['Time'] = (pd.to_datetime('2000-01-01 ' + df['Time']) +
                           pd.Timedelta(eval(self.sess_start.split(':')[0].lstrip('0')), unit = 'h')).dt.time
-            df['Time'] = df['Time'].astype(str)
         #
         figure = go.Figure()
         figure = make_subplots(rows = 2, cols = 1, shared_xaxes = True)
@@ -1031,22 +1133,24 @@ class Dashboard:
         df = self.df.copy()
         # add vertical lines i `Time` is a column of `df`
         if 'Time' in df.columns:
-            if self._plot_trading_sessions == 'Yes':
+            if (self._plot_trading_sessions == 'Yes') and (dashboard.filter_time[0] == dashboard.sess_start) and (dashboard.filter_time[1] == dashboard.sess_end):
                 figure = self._plot_rect_session_2_metrics(figure)
-            if self._plot_rth == 'Yes':
+            if (self._plot_rth == 'Yes') and (dashboard.filter_time[0] == dashboard.sess_start) and (dashboard.filter_time[1] == dashboard.sess_end):
                 figure = self._plot_rect_rth_2_metrics(figure)
             #
-            df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
-                                    'y': [df['Metric_1'].max() - 0.12*(df['Metric_1'].max() - df['Metric_1'].min())]})
-            figure.add_vline(x = self.sess_end, line_width = 2, line_dash = 'dash', line_color = 'cyan', row = 1, col = 1)
-            figure.add_annotation(x = self.sess_end, y = df_temp['y'].values[0], text = 'End session', font = {'size': 14, 'color': 'cyan'},
-                                  textangle = -90, xshift = 20, row = 1, col = 1)
-            df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
-                                    'y': [df['Metric_2'].max() - 0.12*(df['Metric_2'].max() - df['Metric_2'].min())]})
-            figure.add_vline(x = self.sess_end, line_width = 2, line_dash = 'dash', line_color = 'cyan', row = 2, col = 1)
-            figure.add_annotation(x = self.sess_end, y = df_temp['y'].values[0], text = 'End session', font = {'size': 14, 'color': 'cyan'},
-                                  textangle = -90, xshift = 20, row = 2, col = 1)
-            if self.instrument in self.dict_settlement_hour.keys():
+            if (dashboard.filter_time[0] == dashboard.sess_start) and (dashboard.filter_time[1] == dashboard.sess_end):
+                df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
+                                        'y': [df['Metric_1'].max() - 0.12*(df['Metric_1'].max() - df['Metric_1'].min())]})
+                figure.add_vline(x = self.sess_end, line_width = 2, line_dash = 'dash', line_color = 'cyan', row = 1, col = 1)
+                figure.add_annotation(x = self.sess_end, y = df_temp['y'].values[0], text = 'End session', font = {'size': 14, 'color': 'cyan'},
+                                    textangle = -90, xshift = 20, row = 1, col = 1)
+                df_temp = pd.DataFrame({'sess_end': [self.sess_end], 'label': ['End of session'],
+                                        'y': [df['Metric_2'].max() - 0.12*(df['Metric_2'].max() - df['Metric_2'].min())]})
+                figure.add_vline(x = self.sess_end, line_width = 2, line_dash = 'dash', line_color = 'cyan', row = 2, col = 1)
+                figure.add_annotation(x = self.sess_end, y = df_temp['y'].values[0], text = 'End session', font = {'size': 14, 'color': 'cyan'},
+                                    textangle = -90, xshift = 20, row = 2, col = 1)
+            if ((self.instrument in self.dict_settlement_hour.keys()) and (dashboard.filter_time[0] == dashboard.sess_start) and
+                (dashboard.filter_time[1] == dashboard.sess_end)):
                 df_temp = pd.DataFrame({'settlement': [self.dict_settlement_hour[self.instrument]], 'label': ['Settlement time'],
                                         'y': [df['Metric_1'].max() - 0.15*(df['Metric_1'].max() - df['Metric_1'].min())]})
                 figure.add_vline(x = self.dict_settlement_hour[self.instrument], line_width = 2, line_dash = 'dash', line_color = 'orange', row = 1, col = 1)
@@ -1072,8 +1176,8 @@ class Dashboard:
         #
         start_sess = self.dict_sess[dashboard.instrument][0]
         if start_sess == '17:00:00':
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow', opacity = 0.15,
-                             line_width = 0, row = 1, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= pd.to_datetime('17:00:00').time())[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow',
+                             opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '01:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '21:00:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 1, col = 1)
@@ -1084,8 +1188,8 @@ class Dashboard:
             figure.add_annotation(x = '12:00:00', y = df['Metric_1'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 1, col = 1)
             #
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '17:00:00')[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow', opacity = 0.15,
-                             line_width = 0, row = 2, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= pd.to_datetime('17:00:00').time())[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow',
+                             opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '01:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '21:00:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 2, col = 1)
@@ -1096,8 +1200,8 @@ class Dashboard:
             figure.add_annotation(x = '12:00:00', y = df['Metric_2'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 2, col = 1)
         if start_sess == '18:00:00':
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow', opacity = 0.15,
-                             line_width = 0, row = 1, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= pd.to_datetime('18:00:00').time())[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow',
+                             opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '22:00:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 1, col = 1)
@@ -1108,8 +1212,8 @@ class Dashboard:
             figure.add_annotation(x = '13:00:00', y = df['Metric_1'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 1, col = 1)
             #
-            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= '18:00:00')[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow', opacity = 0.15,
-                             line_width = 0, row = 2, col = 1)
+            figure.add_vrect(x0 = df.loc[np.where(df['Time'] >= pd.to_datetime('18:00:00').time())[0].min(), 'Time'], x1 = '00:00:00', fillcolor = 'yellow',
+                             opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_vrect(x0 = '00:00:00', x1 = '02:00:00', fillcolor = 'yellow', opacity = 0.15, line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '22:00:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 2, col = 1)
@@ -1120,9 +1224,9 @@ class Dashboard:
             figure.add_annotation(x = '13:00:00', y = df['Metric_2'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 2, col = 1)
         if dashboard.instrument == 'FDAX':
-            figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= '01:10:00')[0].min() - 1, 0), 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '08:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
-                             row = 1, col = 1)
+            figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= pd.to_datetime('01:10:00').time())[0].min() - 1, 0), 'Time'],
+                             x1 = df.loc[np.where(df['Time'] <= pd.to_datetime('08:00:00').time())[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0, row = 1, col = 1)
             figure.add_annotation(x = '04:30:00', y = df['Metric_1'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 1, col = 1)
             figure.add_vrect(x0 = '08:00:00', x1 = '15:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 1, col = 1)
@@ -1132,9 +1236,9 @@ class Dashboard:
             figure.add_annotation(x = '19:00:00', y = df['Metric_1'].min()*1.1, text = 'US', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 1, col = 1)
             #
-            figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= '01:10:00')[0].min() - 1, 0), 'Time'],
-                             x1 = df.loc[np.where(df['Time'] <= '08:00:00')[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15, line_width = 0,
-                             row = 2, col = 1)
+            figure.add_vrect(x0 = df.loc[max(np.where(df['Time'] >= pd.to_datetime('01:10:00').time())[0].min() - 1, 0), 'Time'],
+                             x1 = df.loc[np.where(df['Time'] <= pd.to_datetime('08:00:00').time())[0].max(), 'Time'], fillcolor = 'yellow', opacity = 0.15,
+                             line_width = 0, row = 2, col = 1)
             figure.add_annotation(x = '04:30:00', y = df['Metric_2'].min()*1.1, text = 'Asia', font = {'size': 18, 'color': 'white'}, yanchor = 'top',
                                   row = 2, col = 1)
             figure.add_vrect(x0 = '08:00:00', x1 = '15:00:00', fillcolor = 'red', opacity = 0.15, line_width = 0, row = 2, col = 1)
@@ -1193,6 +1297,7 @@ if __name__ == '__main__':
         dashboard._group_to_timeframe()
         #
         dashboard._compute_metric()
+        dashboard._add_split_period()
         dashboard._group_data()
         #
         dashboard._adjust_timeframe()
@@ -1202,7 +1307,6 @@ if __name__ == '__main__':
         dashboard.col_x = dashboard.col_x.capitalize()
         if dashboard.col_color is not None:
             dashboard.col_color = dashboard.col_color.capitalize()
-        df[dashboard.col_x] = df[dashboard.col_x].astype(str)
         # plot
         if dashboard.n_metrics == 1:
             if dashboard.plot_tops_bottoms == 'No':
