@@ -853,6 +853,26 @@ class Dashboard:
             self._compute_metric()
             self._group_data()
 
+    def _fix_missing_dates(self):
+        '''
+        Function to fix possible missing dates: if a date or time is missing, it is added, in order to properly plot the results.
+
+        Args: None.
+
+        Returns: None.
+        '''
+        df = self.df.copy()
+        #
+        if self.col_color is None:
+            df = df.sort_values(by = self.col_x).reset_index(drop = True)
+        else:
+            combinations = np.meshgrid(df[self.col_x].unique(), df[self.col_color].unique())
+            df_temp = pd.DataFrame({self.col_x: combinations[0].ravel(), self.col_color: combinations[1].ravel()})
+            df = df_temp.merge(df, on = [self.col_x, self.col_color], how = 'left')
+            df = df.sort_values(by = [self.col_x, self.col_color]).reset_index(drop = True)
+        #
+        self.df = df
+
     def _plot_1_metric(self):
         '''
         Function to plot the main chart.
@@ -1301,6 +1321,8 @@ if __name__ == '__main__':
         dashboard._group_data()
         #
         dashboard._adjust_timeframe()
+        #
+        dashboard._fix_missing_dates()
         #
         df = dashboard.df
         df.columns = df.columns.str.capitalize()
